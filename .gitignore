@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local databases & env
+*.db
+*.db-journal
+.env
+.env.local
+
+# Node / Next (frontend has its own .gitignore too)
+node_modules/
+.next/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local file uploads (dev storage)
+backend/uploads/

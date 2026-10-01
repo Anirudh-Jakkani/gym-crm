@@ -1,0 +1,56 @@
+# Full stack with Postgres:  docker compose up --build
+# Then open http://localhost:3000 (API docs at http://localhost:8000/api/docs)
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gym
+      POSTGRES_PASSWORD: gym
+      POSTGRES_DB: gym_crm
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gym -d gym_crm"]
+      interval: 5s
+      retries: 10
+
+  # Broker for background jobs (reminders now; imports and AI plans later).
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  api:
+    build: ./backend
+    environment: &backend-env
+      DATABASE_URL: postgresql+asyncpg://gym:gym@db:5432/gym_crm
+      JWT_SECRET: ${JWT_SECRET:-local-docker-secret-change-me-for-anything-real}
+      FRONTEND_URL: http://localhost:3000
+      SCHEDULER: celery
+      REDIS_URL: redis://redis:6379/0
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-reminders@example.com}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports: ["8000:8000"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Celery worker with the beat scheduler embedded (sends membership reminders hourly).
+  worker:
+    build: ./backend
+    command: celery -A app.worker worker --beat --loglevel=info
+    environment: *backend-env
+    depends_on: [api, redis]
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: http://api:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+volumes:
+  pgdata:
