@@ -944,6 +944,129 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/imports/fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fields */
+        get: operations["fields_api_imports_fields_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/templates/{entity}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Template */
+        get: operations["template_api_imports_templates__entity__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Imports */
+        get: operations["list_imports_api_imports_get"];
+        put?: never;
+        /** Upload */
+        post: operations["upload_api_imports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Import */
+        get: operations["get_import_api_imports__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{job_id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check
+         * @description Saves the column mapping and validates every row (nothing is written).
+         */
+        post: operations["check_api_imports__job_id__check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{job_id}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run */
+        post: operations["run_api_imports__job_id__run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{job_id}/problems.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Problems */
+        get: operations["problems_api_imports__job_id__problems_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/members/{token}": {
         parameters: {
             query?: never;
@@ -1267,6 +1390,12 @@ export interface components {
              */
             token_type: string;
         };
+        /** Body_upload_api_imports_post */
+        Body_upload_api_imports_post: {
+            /** File */
+            file: string;
+            entity: components["schemas"]["ImportEntity"];
+        };
         /** Body_upload_attachment_api_expenses__expense_id__attachment_post */
         Body_upload_attachment_api_expenses__expense_id__attachment_post: {
             /** File */
@@ -1314,6 +1443,31 @@ export interface components {
          * @enum {string}
          */
         Channel: "email" | "whatsapp";
+        /** CheckIn */
+        CheckIn: {
+            /** Mapping */
+            mapping: {
+                [key: string]: string;
+            };
+            /** @default skip */
+            duplicate_mode: components["schemas"]["DuplicateMode"];
+            /** @default dmy */
+            date_order: components["schemas"]["DateOrder"];
+        };
+        /** CheckOut */
+        CheckOut: {
+            job: components["schemas"]["ImportJobOut"];
+            /** New */
+            new: number;
+            /** Duplicates */
+            duplicates: number;
+            /** Invalid */
+            invalid: number;
+            /** Errors */
+            errors: components["schemas"]["RowProblem"][];
+            /** Preview */
+            preview: components["schemas"]["PreviewRow"][];
+        };
         /** CheckUpIn */
         CheckUpIn: {
             /** Weight Kg */
@@ -1439,6 +1593,11 @@ export interface components {
             /** Days Left */
             days_left: number | null;
         };
+        /**
+         * DateOrder
+         * @enum {string}
+         */
+        DateOrder: "dmy" | "mdy" | "ymd";
         /** DietPlan */
         DietPlan: {
             /** Daily Calories */
@@ -1556,6 +1715,11 @@ export interface components {
             whatsapp_sent_at: string | null;
         };
         /**
+         * DuplicateMode
+         * @enum {string}
+         */
+        DuplicateMode: "skip" | "update";
+        /**
          * DurationUnit
          * @enum {string}
          */
@@ -1661,6 +1825,17 @@ export interface components {
          * @enum {string}
          */
         ExperienceLevel: "beginner" | "intermediate" | "advanced";
+        /** FieldOut */
+        FieldOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Required */
+            required: boolean;
+            /** Hint */
+            hint: string;
+        };
         /** FinanceSummary */
         FinanceSummary: {
             /** Currency */
@@ -1814,6 +1989,59 @@ export interface components {
              */
             sent_at: string;
         };
+        /**
+         * ImportEntity
+         * @enum {string}
+         */
+        ImportEntity: "members" | "leads" | "payments" | "checkups" | "plans";
+        /** ImportJobOut */
+        ImportJobOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            entity: components["schemas"]["ImportEntity"];
+            status: components["schemas"]["ImportStatus"];
+            /** Filename */
+            filename: string;
+            /** Columns */
+            columns: string[];
+            /** Total Rows */
+            total_rows: number;
+            /** Mapping */
+            mapping: {
+                [key: string]: string;
+            };
+            duplicate_mode: components["schemas"]["DuplicateMode"];
+            date_order: components["schemas"]["DateOrder"];
+            /** Created */
+            created: number;
+            /** Updated */
+            updated: number;
+            /** Skipped */
+            skipped: number;
+            /** Failed */
+            failed: number;
+            /** Processed */
+            processed: number;
+            /** Error */
+            error: string | null;
+            /** Has Error File */
+            has_error_file: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Finished At */
+            finished_at: string | null;
+        };
+        /**
+         * ImportStatus
+         * @enum {string}
+         */
+        ImportStatus: "uploaded" | "ready" | "running" | "done" | "failed";
         /**
          * InitialPayment
          * @description Money taken at the moment a membership is sold.
@@ -2648,6 +2876,17 @@ export interface components {
             /** Body */
             body: string;
         };
+        /** PreviewRow */
+        PreviewRow: {
+            /** Row */
+            row: number;
+            /** Status */
+            status: string;
+            /** Values */
+            values: {
+                [key: string]: string;
+            };
+        };
         /** PublicFormInfo */
         PublicFormInfo: {
             /** Gym Name */
@@ -2833,6 +3072,13 @@ export interface components {
          * @enum {string}
          */
         Role: "owner" | "manager" | "trainer" | "front_desk";
+        /** RowProblem */
+        RowProblem: {
+            /** Row */
+            row: number;
+            /** Messages */
+            messages: string[];
+        };
         /** RunSummaryOut */
         RunSummaryOut: {
             /** Due */
@@ -2935,6 +3181,18 @@ export interface components {
             subject: string;
             /** Body */
             body: string;
+        };
+        /** UploadOut */
+        UploadOut: {
+            job: components["schemas"]["ImportJobOut"];
+            /** Sample */
+            sample: {
+                [key: string]: string | null;
+            }[];
+            /** Suggested Mapping */
+            suggested_mapping: {
+                [key: string]: string;
+            };
         };
         /** UserOut */
         UserOut: {
@@ -5360,6 +5618,236 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["FinanceSummary"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fields_api_imports_fields_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["FieldOut"][];
+                    };
+                };
+            };
+        };
+    };
+    template_api_imports_templates__entity__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity: components["schemas"]["ImportEntity"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_imports_api_imports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJobOut"][];
+                };
+            };
+        };
+    };
+    upload_api_imports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_api_imports_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_import_api_imports__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_api_imports__job_id__check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_api_imports__job_id__run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    problems_api_imports__job_id__problems_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

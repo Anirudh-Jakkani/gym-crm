@@ -98,7 +98,12 @@ const NAV: { label: string; items: NavItem[] }[] = [
     label: "Business",
     items: [
       { title: "Finance", href: "/finance", icon: WalletIcon, hideFor: ["trainer"] },
-      { title: "Import data", href: "/import", icon: FileUpIcon, soon: true },
+      {
+        title: "Import data",
+        href: "/import",
+        icon: FileUpIcon,
+        hideFor: ["trainer", "front_desk"],
+      },
       { title: "Settings", href: "/settings", icon: SettingsIcon },
     ],
   },

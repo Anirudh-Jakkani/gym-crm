@@ -104,7 +104,28 @@ AI settings: `ANTHROPIC_API_KEY` (required to generate), `AI_MODEL` (default `cl
 - **Finance overview** (owners and managers): revenue, expenses, profit and outstanding dues for the month, with month-on-month change. Also a revenue vs expenses chart (6 or 12 months) and breakdowns by payment method and expense category.
 - **Roles:** the front desk sees Payments and Dues. Expenses, the overview and voiding are for managers and owners. Trainers don't see finance.
 
-Next up are data import (CSV/Excel) and analytics. The full plan is in [`docs/plan.md`](docs/plan.md).
+**Phase 8: data import (done)**
+- **What you can import:** plans, members, payments, check-ups and leads, from **CSV or Excel (.xlsx)**. Files can be up to 5 MB and 10,000 rows. Each type has a downloadable template.
+- **Column matching:**
+  - Columns are matched automatically from common names ("Mobile No", "Package", "Expiry Date", "Fees Paid"…).
+  - Each field shows an example value from the file.
+  - Required fields must be matched before you can continue.
+- **Messy data is understood:**
+  - dates like `05/10/2026`, `5 Oct 2026` or Excel dates (you choose day-first or month-first)
+  - amounts like `₹1,800`
+  - durations like "Quarterly" or "3 months"
+  - free text such as "F", "GPay", "fat loss" or "insta"
+- **Members:** importing a member also creates their membership (the end date is worked out from the plan if missing) and a payment with a receipt number for any amount paid.
+- **Payments and check-ups** are matched to members by phone number.
+- **Check before importing:** a dry run shows how many rows are new, already exist, or have problems, with the reason for each problem row and a preview. Nothing is saved until you confirm.
+- **Duplicates:** rows already in Gym CRM are skipped or updated. Members and leads are matched by phone, check-ups by member and date, and plans by name. Payments are never overwritten.
+- **Background run with progress:**
+  - Each row is saved on its own, so one bad row never undoes the rest.
+  - Rows that fail can be downloaded as a CSV with the reason added, ready to fix and re-import.
+  - You get a notification when the import finishes.
+- **Roles:** imports are for owners and managers.
+
+Next up is analytics. The full plan is in [`docs/plan.md`](docs/plan.md).
 
 ## Background jobs & email
 
