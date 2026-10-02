@@ -79,7 +79,32 @@ Storage settings: `STORAGE_PROVIDER=local` (`STORAGE_DIR`, default `./uploads`) 
 
 AI settings: `ANTHROPIC_API_KEY` (required to generate), `AI_MODEL` (default `claude-opus-5-5`), `AI_EFFORT` (default `medium`), `AI_MONTHLY_PLAN_LIMIT` (default 100). Roughly 3K input and 5K output tokens per plan, so about $0.10–0.15 each at Opus 5.5 prices.
 
-Next up are leads, then finance, data import and analytics. The full plan is in [`docs/plan.md`](docs/plan.md).
+**Phase 6: leads pipeline (done)**
+- **Leads:** each has a source (walk-in, phone, Instagram, Facebook, Google, referral, website), an interest, the plan they asked about, an assigned person, a next follow-up and notes. Duplicate open leads with the same phone number are blocked.
+- **Board:** a drag-and-drop Kanban board (New → Contacted → Trial booked → Trial done, plus Lost). There's also a list view, filters (mine, unassigned, source, follow-ups due) and stats (open leads, follow-ups due, 30-day new and joined, 90-day conversion rate). Moving a lead to Lost asks why; booking a trial takes an optional trial time.
+- **Lead panel:** call and WhatsApp buttons, a stage switcher, and a timeline. You can log calls, WhatsApps, visits and notes with the next follow-up in one step. Logging contact with a new lead moves it to Contacted.
+- **Convert to member:** creates the member from the lead, optionally selling the first membership, and opens the new member.
+- **Website enquiry form** (`/join/{token}`):
+  - A public form you can link from your website or Instagram. It's rate-limited and has a hidden honeypot field to catch spam bots.
+  - Repeat enquiries from the same phone are added to the existing lead.
+  - Staff get a notification for each new enquiry.
+  - Turn it on or off and issue a new link from **Leads → Website form**.
+- **Daily follow-up alerts:** each assigned staff member gets a notification for their due follow-ups. Owners and managers get one for unassigned leads. The sidebar badge counts due follow-ups.
+
+**Phase 7: finance (done)**
+- **Payments:**
+  - Record money against a membership (cash, UPI, card, bank transfer, cheque or other, with a reference) or for something else, such as PT or merchandise.
+  - Payments can be partial. Overpaying is refused.
+  - Each gym gets its own sequential receipt numbers (`RCPT-00001`). They're issued atomically, so two people taking payments at once can't get the same number.
+  - Payments are never deleted. A mistake is **voided** with a reason by a manager or owner; it stays on record and stops counting.
+- **Take payment when selling:** onboarding, renewing and converting a lead can record the payment in the same step. A smaller amount leaves the rest as due.
+- **Paid and balance** are shown on every membership. **Dues** lists every membership with money owed, oldest first, with WhatsApp "gentle reminder" and record-payment buttons.
+- **Receipts:** a clean, always-light receipt page with **Print / Save PDF** and **Send on WhatsApp**. Browser printing replaces the server-side PDF from the original plan, which would have needed GTK system libraries.
+- **Expenses:** categories (rent, salaries, utilities, equipment…), who it was paid to, payment method, and an optional bill photo or PDF (checked by its contents, stored privately).
+- **Finance overview** (owners and managers): revenue, expenses, profit and outstanding dues for the month, with month-on-month change. Also a revenue vs expenses chart (6 or 12 months) and breakdowns by payment method and expense category.
+- **Roles:** the front desk sees Payments and Dues. Expenses, the overview and voiding are for managers and owners. Trainers don't see finance.
+
+Next up are data import (CSV/Excel) and analytics. The full plan is in [`docs/plan.md`](docs/plan.md).
 
 ## Background jobs & email
 

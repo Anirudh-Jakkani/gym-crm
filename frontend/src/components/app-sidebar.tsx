@@ -51,6 +51,7 @@ import {
   useSwitchGym,
   type Role,
 } from "@/lib/queries";
+import { useLeadStats } from "@/lib/lead-queries";
 import { useDueReminders } from "@/lib/reminder-queries";
 
 type NavItem = {
@@ -90,13 +91,13 @@ const NAV: { label: string; items: NavItem[] }[] = [
         href: "/checkups",
         icon: HeartPulseIcon,
       },
-      { title: "Leads", href: "/leads", icon: MagnetIcon, soon: true },
+      { title: "Leads", href: "/leads", icon: MagnetIcon },
     ],
   },
   {
     label: "Business",
     items: [
-      { title: "Finance", href: "/finance", icon: WalletIcon, soon: true },
+      { title: "Finance", href: "/finance", icon: WalletIcon, hideFor: ["trainer"] },
       { title: "Import data", href: "/import", icon: FileUpIcon, soon: true },
       { title: "Settings", href: "/settings", icon: SettingsIcon },
     ],
@@ -124,10 +125,14 @@ export function AppSidebar() {
     due.data?.items.filter(
       (i) => i.email_status !== "sent" && !i.whatsapp_sent_at,
     ).length ?? 0;
+  const leadStats = useLeadStats(!!role);
+  const dueFollowUps = leadStats.data?.follow_ups_due ?? 0;
   const badgeFor = (href: string) =>
     href === "/reminders" && pendingReminders > 0
       ? String(pendingReminders)
-      : null;
+      : href === "/leads" && dueFollowUps > 0
+        ? String(dueFollowUps)
+        : null;
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);

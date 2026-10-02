@@ -7,11 +7,9 @@ import {
   CheckCircle2Icon,
   CircleIcon,
   FileUpIcon,
-  MagnetIcon,
   PlusIcon,
   UserCheckIcon,
   UserXIcon,
-  WalletIcon,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -35,8 +33,6 @@ import { useMemberCounts, useMembers, usePlans } from "@/lib/member-queries";
 import { useBranches, useCan, useMe, useStaff } from "@/lib/queries";
 
 const COMING = [
-  { icon: MagnetIcon, title: "Leads pipeline", text: "Track enquiries from first call to joining." },
-  { icon: WalletIcon, title: "Revenue & expenses", text: "Payments, dues, expenses and profit by month." },
   { icon: FileUpIcon, title: "Import your data", text: "Bring members and payments over from spreadsheets." },
 ];
 
