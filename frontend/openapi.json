@@ -3899,6 +3899,69 @@
         }
       }
     },
+    "/api/analytics": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Analytics",
+        "description": "Members, money, leads and progress over the last `months` months (this one included).",
+        "operationId": "analytics_api_analytics_get",
+        "parameters": [
+          {
+            "name": "months",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 24,
+              "minimum": 1,
+              "default": 6,
+              "title": "Months"
+            }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Branch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/public/members/{token}": {
       "get": {
         "tags": [
@@ -4724,6 +4787,79 @@
         ],
         "title": "ActivityOut"
       },
+      "AnalyticsOut": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "today": {
+            "type": "string",
+            "format": "date",
+            "title": "Today"
+          },
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Period Start"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/Kpis"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/MemberMonth"
+            },
+            "type": "array",
+            "title": "Members"
+          },
+          "finance": {
+            "items": {
+              "$ref": "#/components/schemas/FinanceMonth"
+            },
+            "type": "array",
+            "title": "Finance"
+          },
+          "revenue_by_plan": {
+            "items": {
+              "$ref": "#/components/schemas/PlanAmount"
+            },
+            "type": "array",
+            "title": "Revenue By Plan"
+          },
+          "active_by_plan": {
+            "items": {
+              "$ref": "#/components/schemas/PlanCount"
+            },
+            "type": "array",
+            "title": "Active By Plan"
+          },
+          "upcoming": {
+            "$ref": "#/components/schemas/Upcoming"
+          },
+          "leads": {
+            "$ref": "#/components/schemas/LeadAnalytics"
+          },
+          "checkups": {
+            "$ref": "#/components/schemas/CheckupProgress"
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "today",
+          "period_start",
+          "kpis",
+          "members",
+          "finance",
+          "revenue_by_plan",
+          "active_by_plan",
+          "upcoming",
+          "leads",
+          "checkups"
+        ],
+        "title": "AnalyticsOut"
+      },
       "AuthOut": {
         "properties": {
           "user": {
@@ -5489,6 +5625,56 @@
         },
         "type": "object",
         "title": "CheckUpUpdate"
+      },
+      "CheckupProgress": {
+        "properties": {
+          "members_tracked": {
+            "type": "integer",
+            "title": "Members Tracked"
+          },
+          "on_track": {
+            "type": "integer",
+            "title": "On Track"
+          },
+          "avg_weight_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Weight Change"
+          },
+          "avg_body_fat_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Body Fat Change"
+          },
+          "by_goal": {
+            "items": {
+              "$ref": "#/components/schemas/GoalProgress"
+            },
+            "type": "array",
+            "title": "By Goal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "members_tracked",
+          "on_track",
+          "avg_weight_change",
+          "avg_body_fat_change",
+          "by_goal"
+        ],
+        "title": "CheckupProgress"
       },
       "ConvertIn": {
         "properties": {
@@ -6308,6 +6494,34 @@
         ],
         "title": "FieldOut"
       },
+      "FinanceMonth": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "revenue": {
+            "type": "number",
+            "title": "Revenue"
+          },
+          "expenses": {
+            "type": "number",
+            "title": "Expenses"
+          },
+          "profit": {
+            "type": "number",
+            "title": "Profit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "revenue",
+          "expenses",
+          "profit"
+        ],
+        "title": "FinanceMonth"
+      },
       "FinanceSummary": {
         "properties": {
           "currency": {
@@ -6455,6 +6669,47 @@
           "rehab"
         ],
         "title": "Goal"
+      },
+      "GoalProgress": {
+        "properties": {
+          "goal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Goal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "members": {
+            "type": "integer",
+            "title": "Members"
+          },
+          "on_track": {
+            "type": "integer",
+            "title": "On Track"
+          },
+          "avg_weight_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Weight Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "goal",
+          "members",
+          "on_track",
+          "avg_weight_change"
+        ],
+        "title": "GoalProgress"
       },
       "GymMembershipOut": {
         "properties": {
@@ -7056,6 +7311,131 @@
           "after"
         ],
         "title": "Kind"
+      },
+      "Kpis": {
+        "properties": {
+          "active_members": {
+            "type": "integer",
+            "title": "Active Members"
+          },
+          "active_last_month": {
+            "type": "integer",
+            "title": "Active Last Month"
+          },
+          "new_this_month": {
+            "type": "integer",
+            "title": "New This Month"
+          },
+          "new_last_month": {
+            "type": "integer",
+            "title": "New Last Month"
+          },
+          "renewal_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewal Rate"
+          },
+          "revenue_this_month": {
+            "type": "number",
+            "title": "Revenue This Month"
+          },
+          "revenue_last_month": {
+            "type": "number",
+            "title": "Revenue Last Month"
+          },
+          "lead_conversion_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Conversion Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active_members",
+          "active_last_month",
+          "new_this_month",
+          "new_last_month",
+          "renewal_rate",
+          "revenue_this_month",
+          "revenue_last_month",
+          "lead_conversion_rate"
+        ],
+        "title": "Kpis"
+      },
+      "LeadAnalytics": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "converted": {
+            "type": "integer",
+            "title": "Converted"
+          },
+          "lost": {
+            "type": "integer",
+            "title": "Lost"
+          },
+          "conversion_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Rate"
+          },
+          "avg_days_to_convert": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Days To Convert"
+          },
+          "by_stage": {
+            "items": {
+              "$ref": "#/components/schemas/StageCount"
+            },
+            "type": "array",
+            "title": "By Stage"
+          },
+          "by_source": {
+            "items": {
+              "$ref": "#/components/schemas/SourceCount"
+            },
+            "type": "array",
+            "title": "By Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "converted",
+          "lost",
+          "conversion_rate",
+          "avg_days_to_convert",
+          "by_stage",
+          "by_source"
+        ],
+        "title": "LeadAnalytics"
       },
       "LeadDetail": {
         "properties": {
@@ -8223,6 +8603,56 @@
           "current_membership"
         ],
         "title": "MemberListItem"
+      },
+      "MemberMonth": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "active": {
+            "type": "integer",
+            "title": "Active"
+          },
+          "new": {
+            "type": "integer",
+            "title": "New"
+          },
+          "renewed": {
+            "type": "integer",
+            "title": "Renewed"
+          },
+          "churned": {
+            "type": "integer",
+            "title": "Churned"
+          },
+          "renewal_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewal Rate"
+          },
+          "checkups": {
+            "type": "integer",
+            "title": "Checkups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "active",
+          "new",
+          "renewed",
+          "churned",
+          "renewal_rate",
+          "checkups"
+        ],
+        "title": "MemberMonth"
       },
       "MemberOut": {
         "properties": {
@@ -9479,6 +9909,24 @@
         ],
         "title": "PhotoOut"
       },
+      "PlanAmount": {
+        "properties": {
+          "plan": {
+            "type": "string",
+            "title": "Plan"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan",
+          "amount"
+        ],
+        "title": "PlanAmount"
+      },
       "PlanContent": {
         "properties": {
           "summary": {
@@ -9516,6 +9964,24 @@
           "safety_notes"
         ],
         "title": "PlanContent"
+      },
+      "PlanCount": {
+        "properties": {
+          "plan": {
+            "type": "string",
+            "title": "Plan"
+          },
+          "members": {
+            "type": "integer",
+            "title": "Members"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan",
+          "members"
+        ],
+        "title": "PlanCount"
       },
       "PlanIn": {
         "properties": {
@@ -10688,6 +11154,28 @@
         ],
         "title": "SignupIn"
       },
+      "SourceCount": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/LeadSource"
+          },
+          "leads": {
+            "type": "integer",
+            "title": "Leads"
+          },
+          "converted": {
+            "type": "integer",
+            "title": "Converted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "leads",
+          "converted"
+        ],
+        "title": "SourceCount"
+      },
       "StaffOut": {
         "properties": {
           "id": {
@@ -10788,6 +11276,23 @@
         "type": "object",
         "title": "StaffUpdate"
       },
+      "StageCount": {
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/LeadStage"
+          },
+          "leads": {
+            "type": "integer",
+            "title": "Leads"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "leads"
+        ],
+        "title": "StageCount"
+      },
       "StageIn": {
         "properties": {
           "stage": {
@@ -10872,6 +11377,24 @@
           "body"
         ],
         "title": "Template"
+      },
+      "Upcoming": {
+        "properties": {
+          "expiring_30_days": {
+            "type": "integer",
+            "title": "Expiring 30 Days"
+          },
+          "renewal_value": {
+            "type": "number",
+            "title": "Renewal Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expiring_30_days",
+          "renewal_value"
+        ],
+        "title": "Upcoming"
       },
       "UploadOut": {
         "properties": {

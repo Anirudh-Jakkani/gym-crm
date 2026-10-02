@@ -125,7 +125,29 @@ AI settings: `ANTHROPIC_API_KEY` (required to generate), `AI_MODEL` (default `cl
   - You get a notification when the import finishes.
 - **Roles:** imports are for owners and managers.
 
-Next up is analytics. The full plan is in [`docs/plan.md`](docs/plan.md).
+**Phase 9: analytics (done)**
+- **Analytics page** for owners and managers. It covers the last 3, 6 or 12 months and can be filtered by branch; the filter is kept in the URL so a view can be shared.
+- **Headline numbers:**
+  - active members and new members this month, each compared with last month
+  - revenue this month
+  - renewal rate: of the memberships that ended, how many renewed
+  - lead conversion
+- **Members:** active members at the end of each month, plus how many joined and how many didn't renew. Each month's renewal rate is in the tooltip.
+- **Renewals:**
+  - members whose membership ends in the next 30 days and hasn't been renewed, with what they paid last time
+  - renewal rate by month
+  - active members by plan
+- **Money:**
+  - revenue and expenses as bars per month, with profit as a line
+  - revenue by plan; payments not tied to a membership show as "Other payments"
+- **Leads:** where the period's leads are in the pipeline, average days to convert, and conversion rate by source.
+- **Progress:** each member's first and latest check-up in the period are compared, for members with at least two:
+  - how many are on track for their goal (weight down for weight loss, muscle up for muscle gain, body fat or waist down otherwise)
+  - average weight and body fat change, broken down by goal
+- **How it's computed:** figures are calculated live from the source tables, using the same rules as member status. This is fast at single-gym scale. Nightly rollup tables can replace it later without changing the API.
+- **Branch filter scope:** leads aren't tied to a branch, so they're always gym-wide. Expenses without a branch are left out when a branch is selected.
+
+Next up is launch: audit log, CSV export, error monitoring and deployment. The full plan is in [`docs/plan.md`](docs/plan.md).
 
 ## Background jobs & email
 

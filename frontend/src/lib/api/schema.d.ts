@@ -1067,6 +1067,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Analytics
+         * @description Members, money, leads and progress over the last `months` months (this one included).
+         */
+        get: operations["analytics_api_analytics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/members/{token}": {
         parameters: {
             query?: never;
@@ -1373,6 +1393,33 @@ export interface components {
              */
             created_at: string;
         };
+        /** AnalyticsOut */
+        AnalyticsOut: {
+            /** Currency */
+            currency: string;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            kpis: components["schemas"]["Kpis"];
+            /** Members */
+            members: components["schemas"]["MemberMonth"][];
+            /** Finance */
+            finance: components["schemas"]["FinanceMonth"][];
+            /** Revenue By Plan */
+            revenue_by_plan: components["schemas"]["PlanAmount"][];
+            /** Active By Plan */
+            active_by_plan: components["schemas"]["PlanCount"][];
+            upcoming: components["schemas"]["Upcoming"];
+            leads: components["schemas"]["LeadAnalytics"];
+            checkups: components["schemas"]["CheckupProgress"];
+        };
         /** AuthOut */
         AuthOut: {
             user: components["schemas"]["UserOut"];
@@ -1565,6 +1612,19 @@ export interface components {
             notes?: string | null;
             /** Recorded On */
             recorded_on?: string | null;
+        };
+        /** CheckupProgress */
+        CheckupProgress: {
+            /** Members Tracked */
+            members_tracked: number;
+            /** On Track */
+            on_track: number;
+            /** Avg Weight Change */
+            avg_weight_change: number | null;
+            /** Avg Body Fat Change */
+            avg_body_fat_change: number | null;
+            /** By Goal */
+            by_goal: components["schemas"]["GoalProgress"][];
         };
         /** ConvertIn */
         ConvertIn: {
@@ -1836,6 +1896,17 @@ export interface components {
             /** Hint */
             hint: string;
         };
+        /** FinanceMonth */
+        FinanceMonth: {
+            /** Month */
+            month: string;
+            /** Revenue */
+            revenue: number;
+            /** Expenses */
+            expenses: number;
+            /** Profit */
+            profit: number;
+        };
         /** FinanceSummary */
         FinanceSummary: {
             /** Currency */
@@ -1893,6 +1964,16 @@ export interface components {
          * @enum {string}
          */
         Goal: "weight_loss" | "muscle_gain" | "general_fitness" | "strength" | "endurance" | "flexibility" | "sports" | "rehab";
+        /** GoalProgress */
+        GoalProgress: {
+            goal: components["schemas"]["Goal"] | null;
+            /** Members */
+            members: number;
+            /** On Track */
+            on_track: number;
+            /** Avg Weight Change */
+            avg_weight_change: number | null;
+        };
         /** GymMembershipOut */
         GymMembershipOut: {
             /**
@@ -2102,6 +2183,42 @@ export interface components {
          * @enum {string}
          */
         Kind: "before" | "on_day" | "after";
+        /** Kpis */
+        Kpis: {
+            /** Active Members */
+            active_members: number;
+            /** Active Last Month */
+            active_last_month: number;
+            /** New This Month */
+            new_this_month: number;
+            /** New Last Month */
+            new_last_month: number;
+            /** Renewal Rate */
+            renewal_rate: number | null;
+            /** Revenue This Month */
+            revenue_this_month: number;
+            /** Revenue Last Month */
+            revenue_last_month: number;
+            /** Lead Conversion Rate */
+            lead_conversion_rate: number | null;
+        };
+        /** LeadAnalytics */
+        LeadAnalytics: {
+            /** Total */
+            total: number;
+            /** Converted */
+            converted: number;
+            /** Lost */
+            lost: number;
+            /** Conversion Rate */
+            conversion_rate: number | null;
+            /** Avg Days To Convert */
+            avg_days_to_convert: number | null;
+            /** By Stage */
+            by_stage: components["schemas"]["StageCount"][];
+            /** By Source */
+            by_source: components["schemas"]["SourceCount"][];
+        };
         /** LeadDetail */
         LeadDetail: {
             /**
@@ -2408,6 +2525,23 @@ export interface components {
             joined_on: string;
             status: components["schemas"]["Status"];
             current_membership: components["schemas"]["CurrentMembershipOut"] | null;
+        };
+        /** MemberMonth */
+        MemberMonth: {
+            /** Month */
+            month: string;
+            /** Active */
+            active: number;
+            /** New */
+            new: number;
+            /** Renewed */
+            renewed: number;
+            /** Churned */
+            churned: number;
+            /** Renewal Rate */
+            renewal_rate: number | null;
+            /** Checkups */
+            checkups: number;
         };
         /** MemberOut */
         MemberOut: {
@@ -2751,6 +2885,13 @@ export interface components {
              */
             created_at: string;
         };
+        /** PlanAmount */
+        PlanAmount: {
+            /** Plan */
+            plan: string;
+            /** Amount */
+            amount: number;
+        };
         /** PlanContent */
         PlanContent: {
             /** Summary */
@@ -2762,6 +2903,13 @@ export interface components {
             progression: string;
             /** Safety Notes */
             safety_notes: string[];
+        };
+        /** PlanCount */
+        PlanCount: {
+            /** Plan */
+            plan: string;
+            /** Members */
+            members: number;
         };
         /** PlanIn */
         PlanIn: {
@@ -3113,6 +3261,14 @@ export interface components {
             /** Phone */
             phone?: string | null;
         };
+        /** SourceCount */
+        SourceCount: {
+            source: components["schemas"]["LeadSource"];
+            /** Leads */
+            leads: number;
+            /** Converted */
+            converted: number;
+        };
         /** StaffOut */
         StaffOut: {
             /**
@@ -3154,6 +3310,12 @@ export interface components {
             /** Branch Id */
             branch_id?: string | null;
         };
+        /** StageCount */
+        StageCount: {
+            stage: components["schemas"]["LeadStage"];
+            /** Leads */
+            leads: number;
+        };
         /** StageIn */
         StageIn: {
             stage: components["schemas"]["LeadStage"];
@@ -3181,6 +3343,13 @@ export interface components {
             subject: string;
             /** Body */
             body: string;
+        };
+        /** Upcoming */
+        Upcoming: {
+            /** Expiring 30 Days */
+            expiring_30_days: number;
+            /** Renewal Value */
+            renewal_value: number;
         };
         /** UploadOut */
         UploadOut: {
@@ -5848,6 +6017,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analytics_api_analytics_get: {
+        parameters: {
+            query?: {
+                months?: number;
+                branch_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsOut"];
+                };
             };
             /** @description Validation Error */
             422: {

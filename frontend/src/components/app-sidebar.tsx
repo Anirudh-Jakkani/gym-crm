@@ -58,7 +58,6 @@ type NavItem = {
   title: string;
   href: string;
   icon: LucideIcon;
-  soon?: boolean;
   hideFor?: Role[];
 };
 
@@ -71,7 +70,7 @@ const NAV: { label: string; items: NavItem[] }[] = [
         title: "Analytics",
         href: "/analytics",
         icon: BarChart3Icon,
-        soon: true,
+        hideFor: ["trainer", "front_desk"],
       },
     ],
   },
@@ -97,7 +96,12 @@ const NAV: { label: string; items: NavItem[] }[] = [
   {
     label: "Business",
     items: [
-      { title: "Finance", href: "/finance", icon: WalletIcon, hideFor: ["trainer"] },
+      {
+        title: "Finance",
+        href: "/finance",
+        icon: WalletIcon,
+        hideFor: ["trainer"],
+      },
       {
         title: "Import data",
         href: "/import",
@@ -179,25 +183,14 @@ export function AppSidebar() {
                 .filter((item) => !(role && item.hideFor?.includes(role)))
                 .map((item) => (
                   <SidebarMenuItem key={item.href}>
-                    {item.soon ? (
-                      <SidebarMenuButton
-                        disabled
-                        tooltip={`${item.title} (coming soon)`}
-                      >
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    ) : (
-                      <SidebarMenuButton
-                        isActive={isActive(item.href)}
-                        tooltip={item.title}
-                        render={<Link href={item.href} />}
-                      >
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    )}
-                    {item.soon && <SidebarMenuBadge>Soon</SidebarMenuBadge>}
+                    <SidebarMenuButton
+                      isActive={isActive(item.href)}
+                      tooltip={item.title}
+                      render={<Link href={item.href} />}
+                    >
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
                     {badgeFor(item.href) && (
                       <SidebarMenuBadge className="bg-red-500/15 text-red-600 dark:text-red-400">
                         {badgeFor(item.href)}

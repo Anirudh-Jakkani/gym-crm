@@ -7,6 +7,7 @@ from app import models  # noqa: F401  (registers all tables)
 from app.core.config import settings
 from app.core.scheduler import run_scheduler
 from app.modules.ai_plans.router import router as ai_plans_router
+from app.modules.analytics.router import router as analytics_router
 from app.modules.auth.router import router as auth_router
 from app.modules.checkups.router import router as checkups_router
 from app.modules.finance.router import router as finance_router
@@ -59,6 +60,7 @@ def create_app() -> FastAPI:
     api.include_router(leads_router)
     api.include_router(finance_router)
     api.include_router(imports_router)
+    api.include_router(analytics_router)
     api.include_router(public_router)
     api.include_router(reminders_router)
     api.include_router(notifications_router)

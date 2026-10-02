@@ -15,31 +15,13 @@ import {
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CATEGORY_LABELS, METHOD_LABELS, useFinanceSummary } from "@/lib/finance-queries";
-import { formatMoney } from "@/lib/format";
+import { compactMoney, formatMoney, monthLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "var(--series-1)" },
   expenses: { label: "Expenses", color: "var(--series-2)" },
 } satisfies ChartConfig;
-
-function monthLabel(key: string, long = false) {
-  const [y, m] = key.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("en-GB", { month: long ? "long" : "short", year: long ? "numeric" : undefined });
-}
-
-function compact(n: number, currency: string) {
-  try {
-    return new Intl.NumberFormat(currency === "INR" ? "en-IN" : undefined, {
-      style: "currency",
-      currency,
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(n);
-  } catch {
-    return String(n);
-  }
-}
 
 function Tile({
   label,
@@ -152,7 +134,7 @@ export function FinanceOverview() {
             <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barGap={2} accessibilityLayer>
               <CartesianGrid vertical={false} strokeOpacity={0.5} />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
-              <YAxis width={56} tickLine={false} axisLine={false} tickFormatter={(v: number) => compact(v, c)} />
+              <YAxis width={56} tickLine={false} axisLine={false} tickFormatter={(v: number) => compactMoney(v, c)} />
               <ChartTooltip
                 cursor={{ fillOpacity: 0.3 }}
                 content={
