@@ -172,7 +172,7 @@ The full plan is in [`docs/plan.md`](docs/plan.md). Ideas for later: WhatsApp re
 
 ## Deploy
 
-See **[docs/deploy.md](docs/deploy.md)**. The short version: **New → Blueprint** on Render with this repo, then fill in the email, S3/R2 and (optionally) Sentry and Anthropic keys.
+See **[docs/deploy.md](docs/deploy.md)**. In short: an R2 bucket for uploads; the backend on Render via **New → Blueprint** ([render.yaml](render.yaml)); `frontend/` on Vercel with `BACKEND_URL` pointing at the API; then set `FRONTEND_URL` on Render to the Vercel address.
 
 ## Background jobs & email
 

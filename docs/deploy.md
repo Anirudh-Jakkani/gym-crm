@@ -12,27 +12,64 @@ The app has five parts:
 
 Uploaded files (progress photos, expense bills, import files) go to **S3 or Cloudflare R2**. Container disks are wiped on every deploy.
 
-## Option A: Render (one click, recommended to start)
+## Option A: Vercel (web) + Render (everything else). This is the setup in this repo.
 
-[`render.yaml`](../render.yaml) creates all five parts.
+### 1. Storage bucket (Cloudflare R2)
 
-1. Push this repo to GitHub, then in Render choose **New → Blueprint** and pick the repo.
-2. Fill in the values Render asks for. See the [environment variables](#environment-variables) below.
-   - Set `FRONTEND_URL` to the web service's address, for example `https://gym-crm-web.onrender.com`. You can update it after the first deploy if you don't know it yet.
+1. In Cloudflare, go to **R2 → Create bucket** and name it, for example, `gym-crm-uploads`. Leave public access **off**.
+2. Go to **R2 → Manage API tokens → Create API token**:
+   - Permission: **Object Read & Write**
+   - Scope: only this bucket
+3. Keep these three values for the next step: the **Access Key ID**, the **Secret Access Key**, and the endpoint `https://<account id>.r2.cloudflarestorage.com`.
+
+### 2. Backend on Render
+
+1. In Render, choose **New → Blueprint**, connect GitHub and pick this repo. [`render.yaml`](../render.yaml) creates Postgres, Redis, `gym-crm-api` and `gym-crm-worker`.
+2. Fill in what Render asks for:
+   - `FRONTEND_URL`: use `https://example.com` for now; you'll fix it in step 4.
+   - `S3_BUCKET`, `S3_ENDPOINT_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`: from step 1.
    - `JWT_SECRET` is generated for you.
-3. Deploy. The API applies the migrations itself. Open the web URL and sign up: the first account creates your gym.
-4. *(Optional)* Add a custom domain to **gym-crm-web**, then update `FRONTEND_URL`.
+3. Apply. The first build takes a few minutes. When it finishes, open `https://<your api>.onrender.com/api/health/ready`; it should say `ok`.
 
-> **Cost:** roughly the price of 3 starter services + a small Postgres + Redis on Render. Free instances sleep when idle, which breaks reminders, so the worker needs a paid plan.
+### 3. Web app on Vercel
 
-## Option B: Vercel (web) + Render or Railway (API, worker, databases)
+1. **Add New → Project**, import the repo, and set **Root Directory** to `frontend`.
+2. Add one environment variable before deploying: `BACKEND_URL` = the API's address from step 2, e.g. `https://gym-crm-api.onrender.com`. Proxy rewrites are fixed at build time, so redeploy after changing it.
+3. Deploy, then note the address Vercel gives you, e.g. `https://gym-crm.vercel.app`.
 
-1. Deploy the backend pieces as in option A, but leave out the `gym-crm-web` service.
-2. Import `frontend/` into Vercel and set these:
-   - `BACKEND_URL`: the API's public URL, e.g. `https://gym-crm-api.onrender.com`. Rewrites are fixed at build time, so redeploy after changing it.
-   - `NEXT_PUBLIC_SENTRY_DSN` and `SENTRY_DSN`: optional.
-3. Set `FRONTEND_URL` on the API to the Vercel URL.
-4. Set `TRUSTED_PROXY_HOPS=2` on the API, because Vercel's edge and the Next.js server both append to `X-Forwarded-For`.
+### 4. Connect the two
+
+1. In Render, go to **Env Groups → gym-crm-backend** and set `FRONTEND_URL` to the Vercel address.
+2. Save and redeploy the API and the worker. Invite and preview links use this address.
+3. Open the Vercel address and **sign up**: the first account creates your gym.
+
+### Later
+
+- **Email reminders:** verify a domain in [Resend](https://resend.com). Then set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY` and `EMAIL_FROM_ADDRESS` in the env group.
+- **Custom domain:** add it in Vercel, then update `FRONTEND_URL`.
+- **Optional services:**
+  - Sentry: `SENTRY_DSN` in Render, plus `NEXT_PUBLIC_SENTRY_DSN` and `SENTRY_DSN` in Vercel.
+  - AI plans: `ANTHROPIC_API_KEY` in Render.
+
+> **Cost:** Vercel's free tier covers the web app. On Render you pay for the API, the worker, Postgres and Redis. The Blueprint page shows the total before you confirm. Free Render instances sleep when idle, which stops reminders, so use paid plans for the API and the worker.
+
+## Option B: everything on Render
+
+Add this service to `render.yaml`:
+
+```yaml
+  - type: web
+    name: gym-crm-web
+    runtime: docker
+    plan: starter
+    rootDir: frontend
+    healthCheckPath: /login
+    envVars:
+      - key: BACKEND_URL # build-time; private network
+        fromService: { type: web, name: gym-crm-api, property: hostport }
+```
+
+Then set `FRONTEND_URL` to the web service's address.
 
 ## Option C: your own server (Docker)
 

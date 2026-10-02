@@ -1,6 +1,7 @@
-# Render Blueprint: Dashboard → New → Blueprint → pick this repo.
-# Creates Postgres, Redis (Key Value), the API, the background worker and the web app.
-# Values marked `sync: false` are asked for when the Blueprint is created. See docs/deploy.md.
+# Render Blueprint for the backend: Dashboard → New → Blueprint → pick this repo.
+# Creates Postgres, Redis (Key Value), the API and the background worker. The web app
+# (frontend/) is deployed on Vercel; to host it on Render instead, see docs/deploy.md.
+# Values marked `sync: false` are asked for when the Blueprint is created.
 
 databases:
   - name: gym-crm-db
@@ -42,21 +43,6 @@ services:
       - key: REDIS_URL
         fromService: { type: keyvalue, name: gym-crm-redis, property: connectionString }
 
-  - type: web
-    name: gym-crm-web
-    runtime: docker
-    plan: starter
-    rootDir: frontend
-    healthCheckPath: /login
-    envVars:
-      # Build-time: Next.js proxies /api to the API over Render's private network.
-      - key: BACKEND_URL
-        fromService: { type: web, name: gym-crm-api, property: hostport }
-      - key: NEXT_PUBLIC_SENTRY_DSN
-        sync: false
-      - key: SENTRY_DSN
-        sync: false
-
 envVarGroups:
   - name: gym-crm-backend
     envVars:
@@ -70,32 +56,27 @@ envVarGroups:
         value: celery
       - key: LOG_JSON
         value: "true"
-      # Render's load balancer + the Next.js proxy both append to X-Forwarded-For.
+      # Vercel's edge and its proxy to Render both append to X-Forwarded-For.
       - key: TRUSTED_PROXY_HOPS
         value: "2"
-      # Your web app's public address, e.g. https://gym-crm-web.onrender.com (used in links).
+      # The web app's public address, e.g. https://gym-crm.vercel.app (used in links and
+      # emails). Put a placeholder first; set the real one once Vercel has deployed.
       - key: FRONTEND_URL
         sync: false
+      # "console" logs reminder emails instead of sending them. Switch to resend (with
+      # RESEND_API_KEY and EMAIL_FROM_ADDRESS) once you have a verified email domain.
       - key: EMAIL_PROVIDER
-        value: resend
-      - key: EMAIL_FROM_ADDRESS
-        sync: false
-      - key: RESEND_API_KEY
-        sync: false
-      # Uploads (progress photos, bills, import files): S3 or Cloudflare R2.
+        value: console
+      # Uploads (progress photos, bills, import files) in a private Cloudflare R2 bucket.
       - key: STORAGE_PROVIDER
         value: s3
+      - key: S3_REGION
+        value: auto
       - key: S3_BUCKET
         sync: false
-      - key: S3_REGION
-        sync: false
-      - key: S3_ENDPOINT_URL
+      - key: S3_ENDPOINT_URL # https://<account id>.r2.cloudflarestorage.com
         sync: false
       - key: S3_ACCESS_KEY_ID
         sync: false
       - key: S3_SECRET_ACCESS_KEY
-        sync: false
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: SENTRY_DSN
         sync: false
