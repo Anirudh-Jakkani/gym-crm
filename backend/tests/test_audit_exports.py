@@ -198,3 +198,10 @@ async def test_export_roles_and_isolation(
     desk = await invite_and_accept(client, owner, "desk@a.com", "front_desk")
     assert (await client.get("/api/exports/members.csv", headers=desk.headers)).status_code == 403
     assert read_csv(await client.get("/api/exports/members.csv", headers=other_owner.headers)) == []
+
+
+def test_audit_timestamps_strictly_increase():
+    from app.modules.audit.service import _timestamp
+
+    stamps = [_timestamp() for _ in range(1000)]
+    assert all(a < b for a, b in zip(stamps, stamps[1:], strict=False))

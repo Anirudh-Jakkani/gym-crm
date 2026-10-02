@@ -1,9 +1,12 @@
+import threading
 import uuid
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import utcnow
 from app.core.deps import TenantContext
 from app.modules.audit.models import AuditLog
 
@@ -22,6 +25,22 @@ def _jsonable(v: Any) -> Any:
     return v
 
 
+_last: datetime | None = None
+_lock = threading.Lock()
+
+
+def _timestamp() -> datetime:
+    """Strictly increasing within this process, so entries keep the order they happened in
+    even when the clock is coarse (Windows ticks every ~15 ms) or one request logs several."""
+    global _last
+    with _lock:
+        now = utcnow()
+        if _last is not None and now <= _last:
+            now = _last + timedelta(microseconds=1)
+        _last = now
+        return now
+
+
 def record(
     db: AsyncSession,
     ctx: TenantContext,
@@ -34,6 +53,7 @@ def record(
     db.add(
         AuditLog(
             gym_id=ctx.gym_id,
+            created_at=_timestamp(),
             actor_id=ctx.user.id,
             actor_name=ctx.user.name,
             action=action,
