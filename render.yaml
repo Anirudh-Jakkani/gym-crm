@@ -1,0 +1,101 @@
+# Render Blueprint: Dashboard → New → Blueprint → pick this repo.
+# Creates Postgres, Redis (Key Value), the API, the background worker and the web app.
+# Values marked `sync: false` are asked for when the Blueprint is created. See docs/deploy.md.
+
+databases:
+  - name: gym-crm-db
+    plan: basic-256mb
+    databaseName: gym_crm
+    postgresMajorVersion: "16"
+
+services:
+  - type: keyvalue
+    name: gym-crm-redis
+    plan: starter
+    ipAllowList: [] # private network only
+    maxmemoryPolicy: noeviction # job queue: never drop tasks
+
+  - type: web
+    name: gym-crm-api
+    runtime: docker
+    plan: starter
+    rootDir: backend
+    healthCheckPath: /api/health/ready
+    envVars:
+      - fromGroup: gym-crm-backend
+      - key: DATABASE_URL
+        fromDatabase: { name: gym-crm-db, property: connectionString }
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: gym-crm-redis, property: connectionString }
+
+  - type: worker
+    name: gym-crm-worker
+    runtime: docker
+    plan: starter
+    rootDir: backend
+    # Worker with the beat scheduler embedded. Keep exactly one instance of this service.
+    dockerCommand: celery -A app.worker worker --beat --loglevel=info
+    envVars:
+      - fromGroup: gym-crm-backend
+      - key: DATABASE_URL
+        fromDatabase: { name: gym-crm-db, property: connectionString }
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: gym-crm-redis, property: connectionString }
+
+  - type: web
+    name: gym-crm-web
+    runtime: docker
+    plan: starter
+    rootDir: frontend
+    healthCheckPath: /login
+    envVars:
+      # Build-time: Next.js proxies /api to the API over Render's private network.
+      - key: BACKEND_URL
+        fromService: { type: web, name: gym-crm-api, property: hostport }
+      - key: NEXT_PUBLIC_SENTRY_DSN
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+envVarGroups:
+  - name: gym-crm-backend
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SCHEDULER
+        value: celery
+      - key: LOG_JSON
+        value: "true"
+      # Render's load balancer + the Next.js proxy both append to X-Forwarded-For.
+      - key: TRUSTED_PROXY_HOPS
+        value: "2"
+      # Your web app's public address, e.g. https://gym-crm-web.onrender.com (used in links).
+      - key: FRONTEND_URL
+        sync: false
+      - key: EMAIL_PROVIDER
+        value: resend
+      - key: EMAIL_FROM_ADDRESS
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      # Uploads (progress photos, bills, import files): S3 or Cloudflare R2.
+      - key: STORAGE_PROVIDER
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false

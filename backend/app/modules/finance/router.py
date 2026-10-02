@@ -12,6 +12,7 @@ from app.core.db import utcnow
 from app.core.deps import DbSession, ManagerContext, TenantContext, require_roles
 from app.core.schemas import round_money
 from app.core.storage import IMAGE_TYPES, get_storage, sniff_image_type
+from app.modules.audit import service as audit
 from app.modules.auth.models import User
 from app.modules.finance import service
 from app.modules.finance.models import Expense, ExpenseCategory, Payment, PaymentMethod
@@ -72,6 +73,15 @@ async def record_payment(member_id: uuid.UUID, body: PaymentIn, ctx: DeskContext
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Member not found")
     payment = await service.record_payment(
         db, ctx.gym_id, member, body, ctx.user.id, await gym_today(db, ctx.gym_id)
+    )
+    audit.record(
+        db,
+        ctx,
+        "payment.recorded",
+        f"Recorded {audit.amount(payment.amount)} {payment.method.value.replace('_', ' ')} "
+        f"payment from {member.name} ({payment.receipt_no})",
+        payment.id,
+        {"member_id": member.id, "amount": payment.amount},
     )
     await db.commit()
     (out,) = await service.payments_out(db, [payment])
@@ -180,6 +190,15 @@ async def void_payment(payment_id: uuid.UUID, body: VoidIn, ctx: ManagerContext,
     p.voided_at = utcnow()
     p.void_reason = body.reason.strip()
     p.voided_by = ctx.user.id
+    name = await db.scalar(select(Member.name).where(Member.id == p.member_id))
+    audit.record(
+        db,
+        ctx,
+        "payment.voided",
+        f"Voided {p.receipt_no} ({audit.amount(p.amount)} from {name}): {p.void_reason}",
+        p.id,
+        {"member_id": p.member_id, "amount": p.amount},
+    )
     await db.commit()
     (out,) = await service.payments_out(db, [p])
     return out
@@ -313,6 +332,14 @@ async def list_expenses(
     )
 
 
+def _expense_label(e: Expense) -> str:
+    vendor = f" to {e.vendor}" if e.vendor else ""
+    return (
+        f"{e.category.value.replace('_', ' ')} expense of {audit.amount(e.amount)}{vendor} "
+        f"on {e.spent_on:%d %b %Y}"
+    )
+
+
 @router.post("/expenses", response_model=ExpenseOut, status_code=status.HTTP_201_CREATED)
 async def create_expense(body: ExpenseIn, ctx: ManagerContext, db: DbSession):
     today = await gym_today(db, ctx.gym_id)
@@ -329,6 +356,10 @@ async def create_expense(body: ExpenseIn, ctx: ManagerContext, db: DbSession):
         recorded_by=ctx.user.id,
     )
     db.add(e)
+    await db.flush()
+    audit.record(
+        db, ctx, "expense.created", f"Added {_expense_label(e)}", e.id, {"amount": e.amount}
+    )
     await db.commit()
     (out,) = await _expenses_out(db, [e])
     return out
@@ -349,8 +380,13 @@ async def update_expense(
         )
     if values.get("branch_id"):
         await BranchRepository(db, ctx.gym_id).get_or_404(values["branch_id"])
+    changed = audit.changes({k: getattr(e, k) for k in values}, values)
     for k, v in values.items():
         setattr(e, k, v)
+    if changed:
+        audit.record(
+            db, ctx, "expense.updated", f"Edited {_expense_label(e)}", e.id, {"changes": changed}
+        )
     await db.commit()
     (out,) = await _expenses_out(db, [e])
     return out
@@ -361,6 +397,9 @@ async def delete_expense(expense_id: uuid.UUID, ctx: ManagerContext, db: DbSessi
     e = await _expense(db, ctx.gym_id, expense_id)
     key = e.attachment_key
     await db.delete(e)
+    audit.record(
+        db, ctx, "expense.deleted", f"Deleted {_expense_label(e)}", details={"amount": e.amount}
+    )
     await db.commit()
     if key:
         await get_storage().delete(key)

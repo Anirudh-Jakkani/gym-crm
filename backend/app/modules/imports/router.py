@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.core.db import get_sessionmaker
 from app.core.deps import DbSession, ManagerContext
 from app.core.storage import get_storage
+from app.modules.audit import service as audit
 from app.modules.imports import service
 from app.modules.imports.importers import FIELDS, suggest_mapping
 from app.modules.imports.models import (
@@ -242,6 +243,13 @@ async def run(
     if job.status != ImportStatus.READY:
         raise HTTPException(status.HTTP_409_CONFLICT, "Check the file before importing")
     job.status = ImportStatus.RUNNING
+    audit.record(
+        db,
+        ctx,
+        "import.started",
+        f"Imported {job.entity.value} from {job.filename} ({job.total_rows} rows)",
+        job.id,
+    )
     await db.commit()
     background.add_task(service.run_job, sessions, job.id)
     return _out(job)

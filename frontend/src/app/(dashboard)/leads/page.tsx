@@ -11,9 +11,10 @@ import {
   SearchIcon,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 
+import { useDebounced } from "@/hooks/use-debounced";
 import { FollowUpBadge } from "@/components/leads/follow-up";
 import { LeadBoard } from "@/components/leads/lead-board";
 import { LeadDialog } from "@/components/leads/lead-dialog";
@@ -62,15 +63,6 @@ import { useCan } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 const ALL = "all";
-
-function useDebounced<T>(value: T, ms: number) {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(t);
-  }, [value, ms]);
-  return v;
-}
 
 function WebsiteFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const form = useLeadForm(open);

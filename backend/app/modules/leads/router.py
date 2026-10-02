@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.db import utcnow
 from app.core.deps import CurrentContext, DbSession, ManagerContext, TenantContext, require_roles
 from app.core.security import generate_url_token
+from app.modules.audit import service as audit
 from app.modules.gyms.models import Gym, Role
 from app.modules.leads import service
 from app.modules.leads.models import OPEN_STAGES, ActivityKind, Lead, LeadSource, LeadStage
@@ -276,7 +277,9 @@ async def update_lead(lead_id: uuid.UUID, body: LeadUpdate, ctx: CurrentContext,
 
 @router.delete("/{lead_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_lead(lead_id: uuid.UUID, ctx: ManagerContext, db: DbSession) -> None:
-    await db.delete(await _lead(db, ctx.gym_id, lead_id))
+    lead = await _lead(db, ctx.gym_id, lead_id)
+    await db.delete(lead)
+    audit.record(db, ctx, "lead.deleted", f"Deleted lead {lead.name} ({lead.phone})")
     await db.commit()
 
 
@@ -376,5 +379,6 @@ async def convert(lead_id: uuid.UUID, body: ConvertIn, ctx: DeskContext, db: DbS
     lead.converted_at = lead.stage_changed_at = utcnow()
     lead.next_follow_up_at = None
     service.log(lead, ActivityKind.CONVERTED, "Converted to a member", ctx.user.id)
+    audit.record(db, ctx, "lead.converted", f"Converted lead {lead.name} into a member", member.id)
     await db.commit()
     return await service.lead_detail(db, await _lead(db, ctx.gym_id, lead_id))

@@ -147,7 +147,32 @@ AI settings: `ANTHROPIC_API_KEY` (required to generate), `AI_MODEL` (default `cl
 - **How it's computed:** figures are calculated live from the source tables, using the same rules as member status. This is fast at single-gym scale. Nightly rollup tables can replace it later without changing the API.
 - **Branch filter scope:** leads aren't tied to a branch, so they're always gym-wide. Expenses without a branch are left out when a branch is selected.
 
-Next up is launch: audit log, CSV export, error monitoring and deployment. The full plan is in [`docs/plan.md`](docs/plan.md).
+**Phase 10: launch readiness (done)**
+- **Activity log** (Settings → Activity, owners only): who did what, written in the same transaction as the change itself.
+  - Covers members, memberships, payments and voids, expenses, plans, staff and roles, branches, gym and reminder settings, imports, exports, published AI plans and deleted check-ups.
+  - Edits record which fields changed. Medical notes and other sensitive values are never copied into the log.
+  - Searchable and filterable by type.
+- **CSV export** (Settings → Data, managers and owners): members, memberships, payments, expenses, plans, leads and check-ups.
+  - Member and plan exports use the import's column names, so a gym can move its data into another account.
+  - Every download is recorded in the activity log.
+- **Error monitoring:** optional Sentry on the API, the worker and the web app, set up so no personal data is sent (no bodies, cookies, query strings or link tokens).
+  - Request IDs appear on every response and log line; logs can be written as JSON.
+  - New 404 and error pages report crashes and give the user a way back.
+- **Hardening:**
+  - Sign-in is rate-limited per IP and per account. Sign-up and invite links are rate-limited too.
+  - Client IPs come only from trusted proxies.
+  - Security headers on both the app and the API.
+  - Production refuses to start with unsafe settings (weak secret, insecure cookies, SQLite, in-process scheduler).
+  - Containers run as non-root, with health checks; there's a readiness check that includes the database.
+  - Hosting providers' `postgres://` URLs are accepted as-is.
+- **Deployment:** a one-click [Render Blueprint](render.yaml) and a [deploy guide](docs/deploy.md) covering Render, Vercel, your own server, environment variables, backups and a go-live checklist.
+  - CI now also runs the migrations up and down on Postgres and builds both Docker images.
+
+The full plan is in [`docs/plan.md`](docs/plan.md). Ideas for later: WhatsApp reminders through the Business API, online payments, a member app, and QR check-in.
+
+## Deploy
+
+See **[docs/deploy.md](docs/deploy.md)**. The short version: **New → Blueprint** on Render with this repo, then fill in the email, S3/R2 and (optionally) Sentry and Anthropic keys.
 
 ## Background jobs & email
 

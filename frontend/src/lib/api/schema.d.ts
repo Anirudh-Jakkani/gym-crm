@@ -11,8 +11,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Health */
+        /**
+         * Health
+         * @description Liveness: the process is up.
+         */
         get: operations["health_api_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ready
+         * @description Readiness: the database answers. Point load balancer health checks here.
+         */
+        get: operations["ready_api_health_ready_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1087,6 +1110,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Audit
+         * @description The gym's activity log, newest first. Owners only: it covers managers too.
+         */
+        get: operations["list_audit_api_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exports/{entity}.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export */
+        get: operations["export_api_exports__entity__csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/members/{token}": {
         parameters: {
             query?: never;
@@ -1419,6 +1479,35 @@ export interface components {
             upcoming: components["schemas"]["Upcoming"];
             leads: components["schemas"]["LeadAnalytics"];
             checkups: components["schemas"]["CheckupProgress"];
+        };
+        /** AuditOut */
+        AuditOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Actor Id */
+            actor_id: string | null;
+            /** Actor Name */
+            actor_name: string;
+            /** Action */
+            action: string;
+            /** Target Type */
+            target_type: string;
+            /** Target Id */
+            target_id: string | null;
+            /** Summary */
+            summary: string;
+            /** Details */
+            details: {
+                [key: string]: unknown;
+            } | null;
         };
         /** AuthOut */
         AuthOut: {
@@ -1885,6 +1974,11 @@ export interface components {
          * @enum {string}
          */
         ExperienceLevel: "beginner" | "intermediate" | "advanced";
+        /**
+         * ExportEntity
+         * @enum {string}
+         */
+        ExportEntity: "members" | "memberships" | "payments" | "expenses" | "leads" | "checkups" | "plans";
         /** FieldOut */
         FieldOut: {
             /** Key */
@@ -2761,6 +2855,17 @@ export interface components {
              */
             created_at: string;
         };
+        /** Page[AuditOut] */
+        Page_AuditOut_: {
+            /** Items */
+            items: components["schemas"]["AuditOut"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
         /** Page[DueCheckUp] */
         Page_DueCheckUp_: {
             /** Items */
@@ -3445,6 +3550,28 @@ export interface components {
 export type $defs = Record<string, never>;
 export interface operations {
     health_api_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    ready_api_health_ready_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -6049,6 +6176,72 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AnalyticsOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_audit_api_audit_get: {
+        parameters: {
+            query?: {
+                target_type?: string | null;
+                actor_id?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                q?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AuditOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_api_exports__entity__csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity: components["schemas"]["ExportEntity"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
